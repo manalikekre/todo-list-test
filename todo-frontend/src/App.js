@@ -1,23 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import Todo from './components/Todo';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+      <section className="todoapp">
+      <Todo todos={[]}/>
+      </section>
+      <footer className="info">
+        <p>Double-click to edit a todo</p>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Created by <a href="http://github.com/petehunt/">petehunt</a>
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+        <p>
+          Part of <a href="http://todomvc.com">TodoMVC</a>
+        </p>
+      </footer>
     </div>
   );
 }

@@ -11,6 +11,8 @@ const Tasks = ({
   onEdit,
   onSave,
   onCancel,
+  isSubtask,
+  addDummySubtask,
 }) => {
   const [editText, setEditText] = useState(todo.title);
   const editField = useRef(null);
@@ -18,10 +20,10 @@ const Tasks = ({
   const handleSubmit = (event) => {
     var val = editText.trim();
     if (val) {
-      onSave(todo.id, val);
+      onSave(val);
       setEditText(val);
     } else {
-      onDestroy(event, todo.id);
+      onDestroy();
     }
   };
   const handleChange = (event) => {
@@ -32,27 +34,35 @@ const Tasks = ({
   const handleKeyDown = (event) => {
     if (event.which === ESCAPE_KEY) {
       setEditText(todo.title);
-      onCancel(event);
+      onCancel();
     } else if (event.which === ENTER_KEY) {
       handleSubmit(event);
     }
   };
   const handleEdit = () => {
-    onEdit(todo.id);
+    onEdit();
     setEditText(todo.title);
+  };
+
+  const onAddSubtask = () => {
+    addDummySubtask();
   };
 
   useEffect(() => {
     if (editing) {
       editField.current.focus();
-      // editField.current.setSelectionRange(todo.title.length, todo.title.length);
+      //editField.current.setSelectionRange(todo.title.length, todo.title.length);
     }
   }, [editing]);
   return (
     <>
       <li
         className={
-          todo.completed ? "completed" : "" + "" + (editing ? "editing" : "")
+          (todo.completed ? "completed" : "") +
+          " " +
+          (editing ? "editing" : "") +
+          " " +
+          (isSubtask ? "subtask" : "")
         }
       >
         <div className="view">
@@ -60,13 +70,18 @@ const Tasks = ({
             className="toggle"
             type="checkbox"
             checked={todo.completed}
-            onChange={(event) => onToggle(event, todo.id)}
+            onChange={(event) => onToggle(event)}
           />
           <label onDoubleClick={handleEdit}>{todo.title}</label>
-          <button
-            className="destroy"
-            onClick={(event) => onDestroy(event, todo.id)}
-          />
+          {!isSubtask ? (
+            <button
+              className="add-subtask"
+              onClick={(event) => onAddSubtask(event, todo.id)}
+            />
+          ) : (
+            ""
+          )}
+          <button className="destroy" onClick={() => onDestroy()} />
         </div>
         <input
           ref={editField}

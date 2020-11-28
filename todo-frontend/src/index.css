@@ -198,6 +198,7 @@ body {
   -webkit-appearance: none;
   appearance: none;
   left: 0;
+  cursor: pointer;
 }
 
 .todo-list li .toggle {
@@ -245,6 +246,7 @@ body {
   color: #cc9a9a;
   margin-bottom: 11px;
   transition: color 0.2s ease-out;
+  cursor: pointer;
 }
 
 .todo-list li .destroy:hover {
@@ -385,4 +387,28 @@ html .clear-completed:active {
   .filters {
     bottom: 10px;
   }
+}
+
+.todo-list li .add-subtask {
+  /* display: none; */
+  position: absolute;
+  top: 0;
+  right: 50px;
+  bottom: 0;
+  width: 40px;
+  height: 40px;
+  margin: auto 0;
+  font-size: 30px;
+  color: #7291e6;
+  margin-bottom: 11px;
+  transition: color 0.2s ease-out;
+  cursor: pointer;
+}
+.todo-list li .add-subtask:after {
+  content: "+";
+}
+
+.todo-list li.subtask {
+  margin-left: 50px;
+  font-size: 17px;
 }

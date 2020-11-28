@@ -2,6 +2,9 @@ const apiRouter = require("express").Router();
 const taskController = require("./controllers/taskController");
 const userController = require("./controllers/userController");
 const subtaskController = require("./controllers/subtaskController");
+const cors = require("cors");
+
+apiRouter.use(cors());
 
 apiRouter.post("/registerUser", userController.createUser);
 apiRouter.post("/login", userController.login);

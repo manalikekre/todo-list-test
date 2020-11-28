@@ -9,33 +9,33 @@ const Subtasks = ({ subtasks, editingSubtask }) => {
       {subtasks.map((subtask) => (
         <Tasks
           todo={subtask}
-          key={subtask.id}
+          key={subtask._id}
           onToggle={() =>
             appDispatch({
               type: "toggleSubtask",
-              subtaskID: subtask.id,
+              subtaskID: subtask._id,
               taskID: subtask.taskID,
             })
           }
           onDestroy={() =>
             appDispatch({
               type: "deleteSubtask",
-              subtaskID: subtask.id,
+              subtaskID: subtask._id,
               taskID: subtask.taskID,
             })
           }
           onEdit={() =>
             appDispatch({
               type: "editSubtask",
-              subtaskID: subtask.id,
+              subtaskID: subtask._id,
               taskID: subtask.taskID,
             })
           }
-          editing={editingSubtask.subtaskID === subtask.id}
+          editing={editingSubtask.subtaskID === subtask._id}
           onSave={(title) =>
             appDispatch({
               type: "updateSubtask",
-              subtaskID: subtask.id,
+              subtaskID: subtask._id,
               title,
               taskID: subtask.taskID,
             })

@@ -1,8 +1,8 @@
 import Tasks from "./Tasks";
 import Subtasks from "./Subtasks";
-import React, { useReducer } from "react";
+import React, { useReducer, useEffect } from "react";
 import DispatchContext from "../DispatchContext";
-
+import Axios from "axios";
 const app = {};
 app.ALL_TODOS = "all";
 app.ACTIVE_TODOS = "active";
@@ -12,48 +12,45 @@ const ENTER_KEY = 13;
 
 const Todo = () => {
   const initialState = {
-    tasks: [
-      //   {
-      //     id: 1,
-      //     title: "Groceries",
-      //     completed: false,
-      //     subtasks: [
-      //       {
-      //         title: "Apple",
-      //         completed: false,
-      //         id: 2,
-      //         taskID: 1,
-      //       },
-      //       {
-      //         title: "Rice",
-      //         completed: false,
-      //         id: 3,
-      //         taskID: 1,
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     id: 4,
-      //     title: "Learn",
-      //     completed: false,
-      //     subtasks: [],
-      //   },
-    ],
+    tasks: [],
     newTask: "",
     editingTask: null,
-    toggling: false,
+    updatingTask: null,
+    deletingTask: null,
     editingSubtask: { subtaskID: null, taskID: null },
     newSubtask: "",
     nowShowing: app.ALL_TODOS,
   };
+  useEffect(() => {
+    const ourRequest = Axios.CancelToken.source();
+    async function getTodos() {
+      try {
+        const response = await Axios.get("/tasks", {
+          cancelToken: ourRequest.CancelToken,
+        });
+        if (response.data && response.data.tasks) {
+          dispatch({ type: "setTasks", tasks: response.data.tasks });
+        }
+      } catch (e) {
+        console.log("Error occurred - ", e);
+      }
+    }
+    getTodos();
+    return ourRequest.cancel();
+  }, []);
   function reducer(state, action) {
     if (action.taskID) {
       var taskIndex = state.tasks.findIndex(
-        (task) => task.id === action.taskID
+        (task) => task._id === action.taskID
       );
       var modifiedTasks = [...state.tasks];
     }
     switch (action.type) {
+      case "setTasks":
+        return {
+          ...state,
+          tasks: action.tasks,
+        };
       case "addTask":
         return {
           ...state,
@@ -62,37 +59,37 @@ const Todo = () => {
             {
               title: action.title,
               completed: false,
-              id: new Date().getTime(),
+              _id: action.taskID,
               subtasks: [],
             },
           ],
           newTask: "",
         };
-      case "toggleTask":
-        let copyTasks = [...state.tasks];
-        copyTasks.map((task) => {
-          if (task.id === action.taskID) {
-            task.completed = !task.completed;
-          }
-        });
-        return { ...state, tasks: copyTasks, toggling: !state.toggling };
-      case "updateTask":
+      case "updateTaskStart":
+        return { ...state, updatingTask: action.task };
+      case "updateTaskComplete":
         let updatedTasks = [...state.tasks];
         updatedTasks.map((task) => {
-          if (task.id === action.taskID) {
-            task.title = action.title;
+          if (task._id === action.task.taskID) {
+            task.title = action.task.title;
+            task.completed = action.task.completed;
           }
         });
-        return { ...state, tasks: updatedTasks, editingTask: null };
-      case "deleteTask":
+        return { ...state, tasks: updatedTasks, updatingTask: null };
+      case "editTaskStart":
+        return { ...state, editingTask: action.taskID };
+      case "editTaskComplete":
+        return { ...state, editingTask: null };
+      case "deleteTaskStart":
+        return { ...state, deletingTask: action.taskID };
+      case "deleteTaskComplete":
         return {
           ...state,
-          tasks: state.tasks.filter((task) => task.id !== action.taskID),
+          tasks: state.tasks.filter((task) => task._id !== action.taskID),
         };
       case "cancelTask":
         return { ...state, editingTask: null };
-      case "editTask":
-        return { ...state, editingTask: action.taskID };
+
       case "changedTask":
         return { ...state, newTask: action.title };
       case "addSubtask":
@@ -101,7 +98,7 @@ const Todo = () => {
           {
             title: action.title,
             completed: false,
-            id: new Date().getTime(),
+            _id: new Date().getTime(),
             taskID: action.taskID,
           },
         ];
@@ -112,7 +109,7 @@ const Todo = () => {
         };
       case "toggleSubtask":
         modifiedTasks[taskIndex].subtasks.map((subtask) => {
-          if (subtask.id === action.subtaskID) {
+          if (subtask._id === action.subtaskID) {
             subtask.completed = !subtask.completed;
           }
         });
@@ -123,7 +120,7 @@ const Todo = () => {
         };
       case "updateSubtask":
         modifiedTasks[taskIndex].subtasks.map((subtask) => {
-          if (subtask.id === action.subtaskID) {
+          if (subtask._id === action.subtaskID) {
             subtask.title = action.title;
           }
         });
@@ -135,7 +132,7 @@ const Todo = () => {
       case "deleteSubtask":
         modifiedTasks[taskIndex].subtasks = state.tasks[
           taskIndex
-        ].subtasks.filter((subtask) => subtask.id !== action.subtaskID);
+        ].subtasks.filter((subtask) => subtask._id !== action.subtaskID);
         return {
           ...state,
           tasks: modifiedTasks,
@@ -151,7 +148,7 @@ const Todo = () => {
             taskID: action.taskID,
           },
         };
-      case "changedTask":
+      case "changedSubtask":
         return { ...state, newSubtask: action.title };
       case "addDummySubtask":
         let editSubtask = new Date().getTime();
@@ -160,7 +157,7 @@ const Todo = () => {
           {
             title: "",
             completed: false,
-            id: editSubtask,
+            _id: editSubtask,
             taskID: action.taskID,
           },
         ];
@@ -179,14 +176,72 @@ const Todo = () => {
   }
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const handleNewTodoKeyDown = (event) => {
+  useEffect(() => {
+    if (state.updatingTask) {
+      let task = state.tasks.find(
+        (task) => task._id === state.updatingTask.taskID
+      );
+      if (
+        task.completed === state.updatingTask.completed &&
+        task.title === state.updatingTask.title
+      ) {
+        return;
+      }
+      const ourRequest = Axios.CancelToken.source();
+      async function updateTask() {
+        try {
+          const response = await Axios.put(
+            `/tasks/${state.updatingTask.taskID}`,
+            {
+              title: state.updatingTask.title,
+              completed: state.updatingTask.completed,
+            },
+            {
+              cancelToken: ourRequest.CancelToken,
+            }
+          );
+          if (response && response.data) {
+            dispatch({ type: "editTaskComplete" });
+            dispatch({ type: "updateTaskComplete", task: state.updatingTask });
+          }
+        } catch (e) {
+          console.log("Error occurred - ", e);
+        }
+      }
+      updateTask();
+      return ourRequest.cancel();
+    }
+  }, [state.updatingTask]);
+
+  useEffect(() => {
+    if (state.deletingTask) {
+      const ourRequest = Axios.CancelToken.source();
+      async function deleteTask() {
+        const response = await Axios.delete(`/tasks/${state.deletingTask}`, {
+          cancelToken: ourRequest.CancelToken,
+        });
+        if (response && response.data) {
+          dispatch({
+            type: "deleteTaskComplete",
+            taskID: state.deletingTask,
+          });
+        }
+      }
+      deleteTask();
+    }
+  }, [state.deletingTask]);
+  const handleNewTodoKeyDown = async (event) => {
     if (event.keyCode !== ENTER_KEY) {
       return;
     }
     event.preventDefault();
     var val = state.newTask.trim();
     if (val) {
-      dispatch({ type: "addTask", title: val });
+      const response = await Axios.post("/tasks", {
+        title: val,
+      });
+      if (response && response.data)
+        dispatch({ type: "addTask", title: val, taskID: response.data._id });
       //add todo to list
     }
   };
@@ -211,24 +266,40 @@ const Todo = () => {
       <section className="main">
         <ul className="todo-list">
           {state.tasks.map((todo) => (
-            <React.Fragment key={todo.id}>
+            <React.Fragment key={todo._id}>
               <Tasks
                 todo={todo}
-                key={todo.id}
+                key={todo._id}
                 onToggle={() =>
-                  dispatch({ type: "toggleTask", taskID: todo.id })
+                  dispatch({
+                    type: "updateTaskStart",
+                    task: {
+                      taskID: todo._id,
+                      title: todo.title,
+                      completed: !todo.completed,
+                    },
+                  })
                 }
                 onDestroy={() =>
-                  dispatch({ type: "deleteTask", taskID: todo.id })
+                  dispatch({ type: "deleteTaskStart", taskID: todo._id })
                 }
-                onEdit={() => dispatch({ type: "editTask", taskID: todo.id })}
-                editing={state.editingTask === todo.id}
+                onEdit={() =>
+                  dispatch({ type: "editTaskStart", taskID: todo._id })
+                }
+                editing={state.editingTask === todo._id}
                 onSave={(title) =>
-                  dispatch({ type: "updateTask", taskID: todo.id, title })
+                  dispatch({
+                    type: "updateTaskStart",
+                    task: {
+                      taskID: todo._id,
+                      title,
+                      completed: todo.completed,
+                    },
+                  })
                 }
                 onCancel={() => dispatch({ type: "cancelTask" })}
                 addDummySubtask={() =>
-                  dispatch({ type: "addDummySubtask", taskID: todo.id })
+                  dispatch({ type: "addDummySubtask", taskID: todo._id })
                 }
               />
               <DispatchContext.Provider value={dispatch}>

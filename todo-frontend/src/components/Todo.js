@@ -18,9 +18,12 @@ const Todo = () => {
     updatingTask: null,
     deletingTask: null,
     editingSubtask: { subtaskID: null, taskID: null },
+    updatingSubtasks: null,
+    deletingSubtask: null,
     newSubtask: "",
     nowShowing: app.ALL_TODOS,
   };
+
   useEffect(() => {
     const ourRequest = Axios.CancelToken.source();
     async function getTodos() {
@@ -38,6 +41,7 @@ const Todo = () => {
     getTodos();
     return ourRequest.cancel();
   }, []);
+
   function reducer(state, action) {
     if (action.taskID) {
       var taskIndex = state.tasks.findIndex(
@@ -93,54 +97,29 @@ const Todo = () => {
       case "changedTask":
         return { ...state, newTask: action.title };
       case "addSubtask":
-        modifiedTasks[taskIndex].subtasks = [
-          ...state.tasks[taskIndex].subtasks,
-          {
-            title: action.title,
-            completed: false,
-            _id: new Date().getTime(),
-            taskID: action.taskID,
-          },
-        ];
+        modifiedTasks[taskIndex].subtasks.map((subtask) => {
+          if (subtask.isDummy) {
+            delete subtask.isDummy;
+            subtask.title = action.title;
+            subtask._id = action.subtaskID;
+          }
+        });
         return {
           ...state,
           tasks: modifiedTasks,
           newSubtask: "",
         };
-      case "toggleSubtask":
+      case "updateSubtaskStart":
+        return { ...state, updatingSubtask: action.subtask };
+      case "updateSubtaskComplete":
         modifiedTasks[taskIndex].subtasks.map((subtask) => {
-          if (subtask._id === action.subtaskID) {
-            subtask.completed = !subtask.completed;
+          if (subtask._id === action.subtask.subtaskID) {
+            subtask.completed = action.subtask.completed;
+            subtask.title = action.subtask.title;
           }
         });
-        return {
-          ...state,
-          tasks: modifiedTasks,
-          toggling: !state.toggling,
-        };
-      case "updateSubtask":
-        modifiedTasks[taskIndex].subtasks.map((subtask) => {
-          if (subtask._id === action.subtaskID) {
-            subtask.title = action.title;
-          }
-        });
-        return {
-          ...state,
-          tasks: modifiedTasks,
-          editingSubtask: { subtaskID: null, taskID: null },
-        };
-      case "deleteSubtask":
-        modifiedTasks[taskIndex].subtasks = state.tasks[
-          taskIndex
-        ].subtasks.filter((subtask) => subtask._id !== action.subtaskID);
-        return {
-          ...state,
-          tasks: modifiedTasks,
-          toggling: !state.toggling,
-        };
-      case "cancelSubtask":
-        return { ...state, editingSubtask: { subtaskID: null, taskID: null } };
-      case "editSubtask":
+        return { ...state, tasks: modifiedTasks, updatingSubtask: null };
+      case "editSubtaskStart":
         return {
           ...state,
           editingSubtask: {
@@ -148,6 +127,33 @@ const Todo = () => {
             taskID: action.taskID,
           },
         };
+      case "editSubtaskComplete":
+        return {
+          ...state,
+          editingSubtask: {
+            subtaskID: null,
+            taskID: null,
+          },
+        };
+      case "deleteSubtaskStart":
+        return {
+          ...state,
+          deletingSubtask: {
+            subtaskID: action.subtaskID,
+            taskID: action.taskID,
+          },
+        };
+      case "deleteSubtaskComplete":
+        modifiedTasks[taskIndex].subtasks = state.tasks[
+          taskIndex
+        ].subtasks.filter((subtask) => subtask._id !== action.subtaskID);
+        return {
+          ...state,
+          tasks: modifiedTasks,
+          deletingSubtask: null,
+        };
+      case "cancelSubtask":
+        return { ...state, editingSubtask: { subtaskID: null, taskID: null } };
       case "changedSubtask":
         return { ...state, newSubtask: action.title };
       case "addDummySubtask":
@@ -159,6 +165,7 @@ const Todo = () => {
             completed: false,
             _id: editSubtask,
             taskID: action.taskID,
+            isDummy: true,
           },
         ];
         return {
@@ -168,7 +175,6 @@ const Todo = () => {
             subtaskID: editSubtask,
             taskID: action.taskID,
           },
-          toggling: !state.toggling,
         };
       default:
         return state;
@@ -230,6 +236,111 @@ const Todo = () => {
       deleteTask();
     }
   }, [state.deletingTask]);
+
+  useEffect(() => {
+    if (state.deletingSubtask) {
+      let task = state.tasks.find(
+        (task) => task._id === state.deletingSubtask.taskID
+      );
+      let prevSubtask = task.subtasks.find(
+        (subtask) => subtask._id === state.deletingSubtask.subtaskID
+      );
+      if (prevSubtask.isDummy) {
+        //dummy data remove
+        dispatch({
+          type: "deleteSubtaskComplete",
+          taskID: state.deletingSubtask.taskID,
+          subtaskID: state.deletingSubtask.subtaskID,
+        });
+        return;
+      }
+      const ourRequest = Axios.CancelToken.source();
+      async function deleteSubtask() {
+        const response = await Axios.delete(
+          `/tasks/${state.deletingSubtask.taskID}/subtasks/${state.deletingSubtask.subtaskID}`,
+          {
+            cancelToken: ourRequest.CancelToken,
+          }
+        );
+        if (response && response.data) {
+          dispatch({
+            type: "deleteSubtaskComplete",
+            taskID: state.deletingSubtask.taskID,
+            subtaskID: state.deletingSubtask.subtaskID,
+          });
+        }
+      }
+      deleteSubtask();
+    }
+  }, [state.deletingSubtask]);
+
+  useEffect(() => {
+    if (state.updatingSubtask) {
+      let task = state.tasks.find(
+        (task) => task._id === state.updatingSubtask.taskID
+      );
+      let prevSubtask = task.subtasks.find(
+        (subtask) => subtask._id === state.updatingSubtask.subtaskID
+      );
+      if (
+        prevSubtask.completed === state.updatingSubtask.completed &&
+        prevSubtask.title === state.updatingSubtask.title
+      ) {
+        return;
+      }
+      if (prevSubtask.isDummy) {
+        //post subtask
+        //modify in state, remove isDummy
+        addSubtask(
+          {
+            title: state.updatingSubtask.title,
+            completed: state.updatingSubtask.completed,
+          },
+          state.updatingSubtask.taskID
+        );
+        return;
+      }
+      const ourRequest = Axios.CancelToken.source();
+      async function updateTask() {
+        try {
+          const response = await Axios.put(
+            `/tasks/${state.updatingSubtask.taskID}/subtasks/${state.updatingSubtask.subtaskID}`,
+            {
+              title: state.updatingSubtask.title,
+              completed: state.updatingSubtask.completed,
+            },
+            {
+              cancelToken: ourRequest.CancelToken,
+            }
+          );
+          if (response && response.data) {
+            dispatch({ type: "editSubtaskComplete" });
+            dispatch({
+              type: "updateSubtaskComplete",
+              subtask: state.updatingSubtask,
+              taskID: state.updatingSubtask.taskID,
+            });
+          }
+        } catch (e) {
+          console.log("Error occurred - ", e);
+        }
+      }
+      updateTask();
+      return ourRequest.cancel();
+    }
+  }, [state.updatingSubtask]);
+
+  const addSubtask = async (payload, taskID) => {
+    const response = await Axios.post(`tasks/${taskID}/subtasks`, payload);
+    if (response && response.data)
+      dispatch({
+        type: "addSubtask",
+        title: payload.title,
+        subtaskID: response.data._id,
+        taskID,
+      });
+  };
+
   const handleNewTodoKeyDown = async (event) => {
     if (event.keyCode !== ENTER_KEY) {
       return;

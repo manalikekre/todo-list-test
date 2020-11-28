@@ -12,21 +12,25 @@ const Subtasks = ({ subtasks, editingSubtask }) => {
           key={subtask._id}
           onToggle={() =>
             appDispatch({
-              type: "toggleSubtask",
-              subtaskID: subtask._id,
-              taskID: subtask.taskID,
+              type: "updateSubtaskStart",
+              subtask: {
+                taskID: subtask.taskID,
+                title: subtask.title,
+                completed: !subtask.completed,
+                subtaskID: subtask._id,
+              },
             })
           }
           onDestroy={() =>
             appDispatch({
-              type: "deleteSubtask",
+              type: "deleteSubtaskStart",
               subtaskID: subtask._id,
               taskID: subtask.taskID,
             })
           }
           onEdit={() =>
             appDispatch({
-              type: "editSubtask",
+              type: "editSubtaskStart",
               subtaskID: subtask._id,
               taskID: subtask.taskID,
             })
@@ -34,10 +38,13 @@ const Subtasks = ({ subtasks, editingSubtask }) => {
           editing={editingSubtask.subtaskID === subtask._id}
           onSave={(title) =>
             appDispatch({
-              type: "updateSubtask",
-              subtaskID: subtask._id,
-              title,
-              taskID: subtask.taskID,
+              type: "updateSubtaskStart",
+              subtask: {
+                taskID: subtask.taskID,
+                subtaskID: subtask._id,
+                title,
+                completed: subtask.completed,
+              },
             })
           }
           onCancel={() => appDispatch({ type: "cancelSubtask" })}

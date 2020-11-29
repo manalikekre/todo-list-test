@@ -427,7 +427,7 @@ const Todo = () => {
         <span className="todo-count">
           <strong>{state.tasks.length}</strong> items left
         </span>
-        <ul className="filters">
+        {/* <ul className="filters">
           <li>
             <a
               href="#/"
@@ -456,7 +456,7 @@ const Todo = () => {
               Completed
             </a>
           </li>
-        </ul>
+        </ul> */}
         {/* {clearButton} */}
       </footer>
     </>

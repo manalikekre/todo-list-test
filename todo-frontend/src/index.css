@@ -59,6 +59,7 @@ body {
   margin: 130px 0 40px 0;
   position: relative;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  margin-top: 250px;
 }
 
 .todoapp input::-webkit-input-placeholder {
@@ -81,7 +82,7 @@ body {
 
 .todoapp h1 {
   position: absolute;
-  top: -155px;
+  top: -135px;
   width: 100%;
   font-size: 100px;
   font-weight: 100;
@@ -272,7 +273,7 @@ body {
 .footer {
   color: #777;
   padding: 10px 15px;
-  height: 20px;
+  height: 35px;
   text-align: center;
   border-top: 1px solid #e6e6e6;
 }
@@ -411,4 +412,170 @@ html .clear-completed:active {
 .todo-list li.subtask {
   margin-left: 50px;
   font-size: 17px;
+}
+
+/* Dots Loading Animation */
+.dots-loading {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.dots-loading::before,
+.dots-loading::after {
+  content: " ";
+}
+
+.dots-loading div,
+.dots-loading::before,
+.dots-loading::after {
+  margin: 35px 5px;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #c4c4c4;
+  opacity: 0;
+}
+
+.dots-loading::before {
+  -moz-animation: opacitychange 1s ease-in-out infinite;
+  -webkit-animation: opacitychange 1s ease-in-out infinite;
+  -o-animation: opacitychange 1s ease-in-out infinite;
+  animation: opacitychange 1s ease-in-out infinite;
+}
+
+.dots-loading div {
+  -moz-animation: opacitychange 1s ease-in-out 0.33s infinite;
+  -webkit-animation: opacitychange 1s ease-in-out 0.33s infinite;
+  -o-animation: opacitychange 1s ease-in-out 0.33s infinite;
+  animation: opacitychange 1s ease-in-out 0.33s infinite;
+  -webkit-animation-fill-mode: infinite;
+  animation-fill-mode: infinite;
+}
+
+.dots-loading::after {
+  -moz-animation: opacitychange 1s ease-in-out 0.66s infinite;
+  -webkit-animation: opacitychange 1s ease-in-out 0.66s infinite;
+  -o-animation: opacitychange 1s ease-in-out 0.66s infinite;
+  animation: opacitychange 1s ease-in-out 0.66s infinite;
+  -webkit-animation-fill-mode: infinite;
+  animation-fill-mode: infinite;
+}
+
+/*login page*/
+.login-page {
+  border: solid 1px #e1e1e1;
+  padding: 50px;
+  margin: auto;
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 0.3rem;
+  background-color: white;
+}
+.login-header {
+  margin-bottom: 20px;
+  text-align: left;
+}
+.register-link {
+  float: left;
+  margin-top: 20px;
+  color: black;
+}
+.register-page {
+  width: 40%;
+  padding-left: 80px;
+  padding-right: 80px;
+}
+
+.btn-success,
+.btn-success:hover {
+  color: #fff;
+  background-color: #6889ee;
+  border-color: #6889ee;
+}
+.floating-alerts .floating-alert:last-of-type {
+  display: block;
+}
+.floating-alert {
+  display: none;
+  position: absolute;
+  z-index: 999;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  -moz-animation: floatingAlert ease-in 5s forwards;
+  -webkit-animation: floatingAlert ease-in 5s forwards;
+  -o-animation: floatingAlert ease-in 5s forwards;
+  animation: floatingAlert ease-in 5s forwards;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+}
+@keyframes floatingAlert {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) scale(1.2);
+  }
+
+  9% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+  }
+
+  91% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+@-webkit-keyframes floatingAlert {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) scale(1.2);
+  }
+
+  9% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+  }
+
+  91% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+.logout-section {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  padding: 20px;
+  width: 100%;
+  border-bottom: 1px solid #e1e1e1;
+  background-color: white;
+}
+.logout-section span {
+  font-size: 25px;
+  float: left;
+}
+.logout-section button {
+  float: right;
 }

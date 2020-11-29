@@ -3,15 +3,11 @@ const Subtask = require("../models/Subtask");
 var ObjectId = require("mongoose").Types.ObjectId;
 //get
 exports.getTasks = async (req, res) => {
-  //   Task.find({ userID: "5fbba9ae3faf8939d0f066fc" }, (err, tasks) => {
-  //     res.json({ tasks });
-  //   });
-
   Task.aggregate(
     [
       {
         $match: {
-          userID: new ObjectId("5fbba9ae3faf8939d0f066fc"),
+          userID: new ObjectId(req.apiUser._id),
         },
       },
       {
@@ -34,7 +30,7 @@ exports.createTask = async (req, res) => {
   try {
     const task = new Task({
       title: req.body.title,
-      userID: "5fbba9ae3faf8939d0f066fc",
+      userID: req.apiUser._id,
       completed: false,
     });
     const newTask = await task.save();

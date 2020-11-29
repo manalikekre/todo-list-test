@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const subtaskSchema = new Schema(
   {
-    taskID: { type: Schema.Types.ObjectId, index: true, ref: "Task" },
+    taskID: { type: Schema.Types.ObjectId, index: true },
     title: String,
     completed: Boolean,
   },

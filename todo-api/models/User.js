@@ -3,9 +3,9 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
-    username: String,
-    email: String,
-    password: String,
+    username: { type: Schema.Types.String, index: true },
+    email: { type: Schema.Types.String, index: true },
+    password: { type: Schema.Types.String, index: true },
   },
   { autoCreate: true }
 );

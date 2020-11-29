@@ -8,7 +8,7 @@ import Axios from "axios";
 import LoadingIcon from "./components/LoadingIcon";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import UserContext from "./UserContext";
-Axios.defaults.baseURL = "http://localhost:8080";
+Axios.defaults.baseURL = process.env.API_SERVER || "http://localhost:8080";
 
 function App() {
   Axios.interceptors.request.use(function (config) {
